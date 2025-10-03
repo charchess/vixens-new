@@ -1,0 +1,1 @@
+# Manifestes Kubernetes (GitOps)
