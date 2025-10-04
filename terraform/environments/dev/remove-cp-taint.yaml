@@ -1,0 +1,12 @@
+# remove-cp-taint.yaml
+- op: add
+  path: /machine/nodeTolerations
+  value:
+    - key: node-role.kubernetes.io/control-plane
+      effect: NoSchedule
+      operator: Equal
+      value: ""
+      
+- op: remove
+  path: /machine/nodeTolerations/0
+  

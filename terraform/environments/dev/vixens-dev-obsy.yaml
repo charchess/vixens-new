@@ -34,4 +34,3 @@ machine:
       - 8.8.8.8
   install:
     disk: /dev/sda
-
