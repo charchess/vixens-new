@@ -80,21 +80,14 @@ resource "null_resource" "wait_api" {
       echo "$KUBECONFIG_RAW" > "$TMP_KUBECONFIG"
       chmod 600 "$TMP_KUBECONFIG"
 
-      echo "Waiting for VIP $KUBE_URL to answer /version ..."
-      until curl -k --cacert <(echo "$KUBE_CA") \
-                 --cert   <(echo "$KUBE_CERT") \
-                 --key    <(echo "$KUBE_KEY") \
-                 "$KUBE_URL/version" >/dev/null 2>&1; do
+      echo "Waiting for API server..."
+      until kubectl --kubeconfig="$TMP_KUBECONFIG" get --raw /version >/dev/null 2>&1; do
         sleep 5
       done
       echo "API reachable"
       rm -f "$TMP_KUBECONFIG"
     EOT
     environment = {
-      KUBE_URL       = var.cluster_endpoint
-      KUBE_CA        = var.talos_certs.ca
-      KUBE_CERT      = var.talos_certs.cert
-      KUBE_KEY       = var.talos_certs.key
       KUBECONFIG_RAW = talos_cluster_kubeconfig.this.kubeconfig_raw
     }
   }
