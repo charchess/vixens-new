@@ -205,34 +205,32 @@ output "kubeconfig" {
 }
 
 
+# destruction des nodes du cluster
+resource "terraform_data" "node_annihilation" {
+  for_each = var.controlplanes
 
-
-resource "null_resource" "reset_before_destroy" {
-  # copie des valeurs **au moment de la création**
-  triggers = {
-    bootstrap_ip = values(var.controlplanes)[0].ip
-    talosconfig  = base64encode(talos_cluster_kubeconfig.this.kubeconfig_raw)
+  input = {
+    node_ip   = each.value.ip
+    node_name = each.key
   }
 
   provisioner "local-exec" {
     when    = destroy
     command = <<-EOT
-      set -e
-      echo "Resetting node $TRIGGER_BOOTSTRAP_IP ..."
-      talosctl --talosconfig <(echo $TRIGGER_TALOSCONFIG | base64 -d) \
-               reset -n $TRIGGER_BOOTSTRAP_IP -e $TRIGGER_BOOTSTRAP_IP \
-               --system-labels-to-wipe STATE \
-               --system-labels-to-wipe EPHEMERAL \
-               --graceful=false \
-               --wait=false \
-               --reboot || true
+      echo "💥 Destroying node ${self.input.node_name} (${self.input.node_ip})..."
+      
+      timeout 30 talosctl \
+        --endpoints ${self.input.node_ip} \
+        --nodes ${self.input.node_ip} \
+        reset \
+        --system-labels-to-wipe STATE,EPHEMERAL \
+        --graceful=false \
+        --wait=false \
+        --reboot || true
+      
+      echo "✅ Node ${self.input.node_name} annihilated"
     EOT
-    environment = {
-      TRIGGER_BOOTSTRAP_IP = self.triggers.bootstrap_ip
-      TRIGGER_TALOSCONFIG  = self.triggers.talosconfig
-    }
+    
+    interpreter = ["/bin/bash", "-c"]
   }
-
-  depends_on = [talos_cluster_kubeconfig.this]
 }
-
