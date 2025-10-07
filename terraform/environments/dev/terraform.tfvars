@@ -1,4 +1,4 @@
-cluster_endpoint = "https://192.168.111.160:6443"
+cluster_endpoint = "https://192.168.111.163:6443"
 
 controlplane_yaml_path = "/root/vixens/talos/vixens-dev/controlplane.yaml"
 

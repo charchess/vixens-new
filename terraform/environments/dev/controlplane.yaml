@@ -36,7 +36,7 @@ cluster:
     id: 70xa1vx3P6uIRdCkndBR4Qj8RDsEss0-zTItOsn1fYc=
     secret: fOcS7tiQdClt0Vt1pJieS19OnBqBfuyp8gW9fIoO5b8=
     controlPlane:
-        endpoint: https://192.168.111.160:6443
+        endpoint: https://192.168.111.163:6443
     clusterName: vixens-dev
     network:
         cni:

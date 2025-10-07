@@ -16,6 +16,11 @@ provider "helm" {
   }
 }
 
+locals {
+  cilium_manifest = file("${path.module}/cilium.yaml")
+}
+
+
 # on fait un talosctl apply du controlplane.yaml et patch per machine
 resource "talos_machine_configuration_apply" "controlplanes" {
   for_each = var.controlplanes
@@ -32,7 +37,10 @@ resource "talos_machine_configuration_apply" "controlplanes" {
   machine_configuration_input = file(var.controlplane_yaml_path)
 
   config_patches = [
-    file(each.value.patch_path)
+    file(each.value.patch_path),
+    templatefile("${path.module}/cilium.yaml.tftpl", {
+      cilium_manifest = local.cilium_manifest
+    })
   ]
 
   apply_mode = "reboot"
@@ -118,35 +126,76 @@ resource "null_resource" "untaint_controlplanes" {
   }
 }
 
+#resource "null_resource" "untaint_not_ready" {
+#  depends_on = [talos_cluster_kubeconfig.this]
+#
+#  provisioner "local-exec" {
+#    interpreter = ["/bin/bash", "-c"]
+#    command     = <<-EOT
+#      set -e
+#      export KUBECONFIG=$(mktemp)
+#      echo "$KUBECONFIG_RAW" > "$KUBECONFIG"
+#      chmod 600 "$KUBECONFIG"
+#      for node in $(kubectl get nodes --no-headers | awk '{print $1}'); do
+#        kubectl taint nodes "$node" node.kubernetes.io/not-ready:NoSchedule- || true
+#      done
+#      rm -f "$KUBECONFIG"
+#    EOT
+#    environment = {
+#      KUBECONFIG_RAW = talos_cluster_kubeconfig.this.kubeconfig_raw
+#    }
+#  }
+#
+#  triggers = {
+#    kubeconfig_raw = talos_cluster_kubeconfig.this.kubeconfig_raw
+#  }
+#}
+
 # on applique cilium
-resource "helm_release" "cilium" {
-  depends_on = [null_resource.untaint_controlplanes]
+#resource "helm_release" "cilium" {
+#  depends_on = [null_resource.untaint_not_ready]
+#
+#  name       = "cilium"
+#  repository = "https://helm.cilium.io"
+#  chart      = "cilium"
+#  version    = "1.17.8"
+#  namespace  = "kube-system"
+#  wait   = true
+#
+#  values = [file("${path.module}/values-cilium.yaml")]
+#}
 
-  name       = "cilium"
-  repository = "https://helm.cilium.io"
-  chart      = "cilium"
-  version    = "1.17.8"
-  namespace  = "kube-system"
-  wait   = true
-
-  # Talos : kube-proxy désactivé → mode strict kube-proxy-free
-
-  set = [
-    { name = "kubeProxyReplacement", value = "strict" },
-    { name = "k8sServiceHost",       value = trimsuffix(trimprefix(var.cluster_endpoint, "https://"), ":6443") },
-    { name = "k8sServicePort",       value = "6443" },
-    { name = "operator.replicas",    value = "1" },
-    { name = "operator.tolerations[0].key",      value = "node-role.kubernetes.io/control-plane" },
-    { name = "operator.tolerations[0].effect",   value = "NoSchedule" },
-    { name = "operator.tolerations[0].operator", value = "Exists" },
-    { name = "agent.tolerations[0].key",      value = "node-role.kubernetes.io/control-plane" },
-    { name = "agent.tolerations[0].effect",   value = "NoSchedule" },
-    { name = "agent.tolerations[0].operator", value = "Exists" }
-  ]
-
-
-}
-
+#resource "null_resource" "post_cilium_fixes" {
+#  depends_on = [helm_release.cilium]
+#
+#  provisioner "local-exec" {
+#    interpreter = ["/bin/bash", "-c"]
+#    command     = <<-EOT
+#      set -e
+#      export KUBECONFIG=$(mktemp)
+#      echo "$KUBECONFIG_RAW" > "$KUBECONFIG"
+#      chmod 600 "$KUBECONFIG"
+#
+#      # 1. enlève le taint NotReady (revenu après apply)
+#      for node in $(kubectl get nodes --no-headers | awk '{print $1}'); do
+#        kubectl taint nodes "$node" node.kubernetes.io/not-ready:NoSchedule- || true
+#      done
+#
+#      # 2. retire l'init-container clean-cilium-state (revenu après apply)
+#      kubectl -n kube-system patch ds/cilium --type=json \
+#        -p='[{"op":"remove","path":"/spec/template/spec/initContainers/4"}]' || true
+#
+#      rm -f "$KUBECONFIG"
+#    EOT
+#    environment = {
+#      KUBECONFIG_RAW = talos_cluster_kubeconfig.this.kubeconfig_raw
+#    }
+#  }
+#
+#  triggers = {
+#    kubeconfig_raw = talos_cluster_kubeconfig.this.kubeconfig_raw
+#  }
+#}
 
 
 
