@@ -1,0 +1,10 @@
+${yamlencode({
+  cluster = {
+    inlineManifests = [
+      {
+        name = "argocd"
+        contents = argocd_manifest
+      }
+    ]
+  }
+})}

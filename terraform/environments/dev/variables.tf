@@ -26,3 +26,9 @@ variable "controlplanes" {
     patch_path   = string
   }))
 }
+
+variable "argocd_lb_ip" {
+  description = "IP statique pour le service LoadBalancer d’ArgoCD (laisser vide pour DHCP)"
+  type        = string
+  default     = ""
+}

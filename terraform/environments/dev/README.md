@@ -120,6 +120,17 @@ cilium status
 - **Hubble**: Observabilité du réseau (si activé)
 - **CNI Plugin**: Configuration automatique
 
+## Destruction du cluster
+
+### Méthode RAZ (Destructiion totale)
+Le cluster est détruit de manière brutale sans graceful shutdown :
+- Pas de drain Kubernetes
+- Reset direct avec `--graceful=false`
+- Destruction parallèle des nœuds
+
+### Limitations Terraform
+Les provisioners de destruction utilisent `self.triggers` pour accéder aux valeurs des nœuds (car `each.value` est interdit en phase destroy).
+
 ## Architecture réseau
 
 ```mermaid
