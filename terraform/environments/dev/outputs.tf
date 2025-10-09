@@ -1,20 +1,20 @@
 output "kubeconfig" {
   description = "Generated kubeconfig for cluster access"
-  value       = talos_cluster_kubeconfig.this.kubeconfig_raw
+  value       = module.talos_cluster.kubeconfig_raw
   sensitive   = true
 }
 
 output "cluster_endpoint" {
   description = "Cluster API endpoint"
-  value       = var.cluster_endpoint
+  value       = module.talos_cluster.cluster_endpoint
 }
 
-output "controlplane_nodes" {
-  description = "List of configured controlplane nodes"
-  value = {
-    for name, node in var.controlplanes : name => {
-      ip       = node.ip
-      hostname = node.hostname
-    }
-  }
+output "node_ips" {
+  description = "Map of node names to their IPs"
+  value       = module.talos_cluster.node_ips
+}
+
+output "bootstrap_status" {
+  description = "Cluster bootstrap status"
+  value       = module.talos_cluster.bootstrap_status
 }
