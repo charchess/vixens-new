@@ -1,10 +1,3 @@
-terraform {
-  required_providers {
-    talos = { source = "siderolabs/talos", version = "0.9.0" }
-    helm  = { source = "hashicorp/helm",  version = "3.0.2" }
-  }
-}
-
 provider "talos" {}
 
 provider "helm" {
@@ -20,8 +13,7 @@ locals {
   cilium_manifest = file("${path.module}/cilium.yaml")
 }
 
-
-# on fait un talosctl apply du controlplane.yaml et patch per machine
+# Apply Talos configuration to controlplane nodes
 resource "talos_machine_configuration_apply" "controlplanes" {
   for_each = var.controlplanes
 
@@ -46,7 +38,7 @@ resource "talos_machine_configuration_apply" "controlplanes" {
   apply_mode = "reboot"
 }
 
-# on bootstrap (trop vite ?)
+# Bootstrap the cluster
 resource "talos_machine_bootstrap" "this" {
   depends_on = [talos_machine_configuration_apply.controlplanes]
 
@@ -58,10 +50,9 @@ resource "talos_machine_bootstrap" "this" {
     client_certificate = var.talos_certs.cert
     client_key         = var.talos_certs.key
   }
-
 }
 
-# on recupere le kubeconfig
+# Retrieve cluster kubeconfig
 resource "talos_cluster_kubeconfig" "this" {
   depends_on = [talos_machine_bootstrap.this]
 
@@ -73,10 +64,9 @@ resource "talos_cluster_kubeconfig" "this" {
     client_certificate = var.talos_certs.cert
     client_key         = var.talos_certs.key
   }
-
 }
 
-# on attend que l'api reponde
+# Wait for API server to be ready
 resource "null_resource" "wait_api" {
   depends_on = [talos_cluster_kubeconfig.this]
 
@@ -92,7 +82,7 @@ resource "null_resource" "wait_api" {
       until kubectl --kubeconfig="$TMP_KUBECONFIG" get --raw /version >/dev/null 2>&1; do
         sleep 5
       done
-      echo "API reachable"
+      echo "API server is ready"
       rm -f "$TMP_KUBECONFIG"
     EOT
     environment = {
@@ -101,7 +91,7 @@ resource "null_resource" "wait_api" {
   }
 }
 
-# on untaint les controlplane (normalement inutile)
+# Remove control-plane taints
 resource "null_resource" "untaint_controlplanes" {
   depends_on = [null_resource.wait_api]
 
@@ -113,7 +103,7 @@ resource "null_resource" "untaint_controlplanes" {
       echo "$KUBECONFIG_RAW" > "$TMP_KUBECONFIG"
       chmod 600 "$TMP_KUBECONFIG"
 
-      echo "Removing control-plane taints ..."
+      echo "Removing control-plane taints..."
       for node in $(kubectl --kubeconfig="$TMP_KUBECONFIG" get nodes -l node-role.kubernetes.io/control-plane= -o name); do
         kubectl --kubeconfig="$TMP_KUBECONFIG" taint nodes "$node" node-role.kubernetes.io/control-plane:NoSchedule- || true
       done
@@ -126,86 +116,7 @@ resource "null_resource" "untaint_controlplanes" {
   }
 }
 
-#resource "null_resource" "untaint_not_ready" {
-#  depends_on = [talos_cluster_kubeconfig.this]
-#
-#  provisioner "local-exec" {
-#    interpreter = ["/bin/bash", "-c"]
-#    command     = <<-EOT
-#      set -e
-#      export KUBECONFIG=$(mktemp)
-#      echo "$KUBECONFIG_RAW" > "$KUBECONFIG"
-#      chmod 600 "$KUBECONFIG"
-#      for node in $(kubectl get nodes --no-headers | awk '{print $1}'); do
-#        kubectl taint nodes "$node" node.kubernetes.io/not-ready:NoSchedule- || true
-#      done
-#      rm -f "$KUBECONFIG"
-#    EOT
-#    environment = {
-#      KUBECONFIG_RAW = talos_cluster_kubeconfig.this.kubeconfig_raw
-#    }
-#  }
-#
-#  triggers = {
-#    kubeconfig_raw = talos_cluster_kubeconfig.this.kubeconfig_raw
-#  }
-#}
-
-# on applique cilium
-#resource "helm_release" "cilium" {
-#  depends_on = [null_resource.untaint_not_ready]
-#
-#  name       = "cilium"
-#  repository = "https://helm.cilium.io"
-#  chart      = "cilium"
-#  version    = "1.17.8"
-#  namespace  = "kube-system"
-#  wait   = true
-#
-#  values = [file("${path.module}/values-cilium.yaml")]
-#}
-
-#resource "null_resource" "post_cilium_fixes" {
-#  depends_on = [helm_release.cilium]
-#
-#  provisioner "local-exec" {
-#    interpreter = ["/bin/bash", "-c"]
-#    command     = <<-EOT
-#      set -e
-#      export KUBECONFIG=$(mktemp)
-#      echo "$KUBECONFIG_RAW" > "$KUBECONFIG"
-#      chmod 600 "$KUBECONFIG"
-#
-#      # 1. enlève le taint NotReady (revenu après apply)
-#      for node in $(kubectl get nodes --no-headers | awk '{print $1}'); do
-#        kubectl taint nodes "$node" node.kubernetes.io/not-ready:NoSchedule- || true
-#      done
-#
-#      # 2. retire l'init-container clean-cilium-state (revenu après apply)
-#      kubectl -n kube-system patch ds/cilium --type=json \
-#        -p='[{"op":"remove","path":"/spec/template/spec/initContainers/4"}]' || true
-#
-#      rm -f "$KUBECONFIG"
-#    EOT
-#    environment = {
-#      KUBECONFIG_RAW = talos_cluster_kubeconfig.this.kubeconfig_raw
-#    }
-#  }
-#
-#  triggers = {
-#    kubeconfig_raw = talos_cluster_kubeconfig.this.kubeconfig_raw
-#  }
-#}
-
-
-
-output "kubeconfig" {
-  value     = talos_cluster_kubeconfig.this.kubeconfig_raw
-  sensitive = true
-}
-
-
-# destruction des nodes du cluster
+# Clean node destruction
 resource "terraform_data" "node_annihilation" {
   for_each = var.controlplanes
 
@@ -218,7 +129,7 @@ resource "terraform_data" "node_annihilation" {
     when    = destroy
     command = <<-EOT
       echo "💥 Destroying node ${self.input.node_name} (${self.input.node_ip})..."
-      
+
       timeout 30 talosctl \
         --endpoints ${self.input.node_ip} \
         --nodes ${self.input.node_ip} \
@@ -227,10 +138,11 @@ resource "terraform_data" "node_annihilation" {
         --graceful=false \
         --wait=false \
         --reboot || true
-      
-      echo "✅ Node ${self.input.node_name} annihilated"
+
+      echo "✅ Node ${self.input.node_name} destroyed"
     EOT
-    
+
     interpreter = ["/bin/bash", "-c"]
   }
 }
+
