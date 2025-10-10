@@ -30,6 +30,13 @@ module "talos_cluster" {
   cluster_endpoint = var.cluster_endpoint
   talos_certs      = var.talos_certs
   
+  # Timeouts augmentés pour environnement lent
+  node_health_max_retries     = 15
+  node_health_retry_delay     = 45
+  node_health_check_timeout   = 45
+  bootstrap_timeout          = 600
+  api_wait_timeout           = 600
+  
   controlplane_config = {
     yaml_path = var.controlplane_yaml_path
     nodes = {
