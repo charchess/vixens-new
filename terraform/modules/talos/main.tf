@@ -39,9 +39,18 @@ resource "talos_machine_configuration_apply" "controlplanes" {
   apply_mode = "reboot"
 }
 
+locals {
+  # Health check endpoints
+  api_health_url = "${replace(var.cluster_endpoint, ":6443", ":50000")}/health"
+  
+  # Retry configuration
+  max_retries = 3
+  retry_delay = 10
+}
+
 # Bootstrap the cluster
 resource "talos_machine_bootstrap" "this" {
-  depends_on = [talos_machine_configuration_apply.controlplanes]
+  depends_on = [null_resource.talos_api_check]
 
   node = local.bootstrap_node
 
@@ -50,6 +59,47 @@ resource "talos_machine_bootstrap" "this" {
     ca_certificate     = var.talos_certs.ca
     client_certificate = var.talos_certs.cert
     client_key         = var.talos_certs.key
+  }
+}
+
+# Post-bootstrap verification
+resource "null_resource" "bootstrap_verification" {
+  depends_on = [talos_machine_bootstrap.this]
+
+  triggers = {
+    bootstrap_id = talos_machine_bootstrap.this.id
+  }
+
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    command     = <<-EOT
+      set -e
+      echo "Verifying cluster bootstrap..."
+      
+      BOOTSTRAP_NODE="${local.bootstrap_node}"
+      MAX_RETRIES=15
+      RETRY_DELAY=20
+      
+      # Vérifier que le bootstrap node est joignable et retourne des membres
+      retries=0
+      while [ $retries -lt $MAX_RETRIES ]; do
+        echo "Bootstrap verification attempt $((retries + 1))/$MAX_RETRIES"
+        
+        # Tester si talosctl get members fonctionne
+        if talosctl --endpoints $BOOTSTRAP_NODE --nodes $BOOTSTRAP_NODE get members >/dev/null 2>&1; then
+          MEMBER_COUNT=$(talosctl --endpoints $BOOTSTRAP_NODE --nodes $BOOTSTRAP_NODE get members 2>/dev/null | grep -c "cluster.*Member" || echo "0")
+          echo "✅ Bootstrap successful - found $MEMBER_COUNT cluster members"
+          exit 0
+        fi
+        
+        retries=$((retries + 1))
+        echo "⏳ Bootstrap not complete, waiting... (retry in $RETRY_DELAY s)"
+        sleep $RETRY_DELAY
+      done
+      
+      echo "❌ Bootstrap verification failed - bootstrap node not responding"
+      exit 1
+    EOT
   }
 }
 
@@ -67,9 +117,9 @@ resource "talos_cluster_kubeconfig" "this" {
   }
 }
 
-# Wait for API server readiness
+# Enhanced API wait with better error handling
 resource "null_resource" "wait_api" {
-  depends_on = [talos_cluster_kubeconfig.this]
+  depends_on = [null_resource.post_bootstrap_health_check]
 
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
@@ -79,12 +129,27 @@ resource "null_resource" "wait_api" {
       echo "$KUBECONFIG_RAW" > "$TMP_KUBECONFIG"
       chmod 600 "$TMP_KUBECONFIG"
 
-      echo "Waiting for API server to be ready..."
-      until kubectl --kubeconfig="$TMP_KUBECONFIG" get --raw /version >/dev/null 2>&1; do
-        sleep 5
+      echo "Waiting for Kubernetes API server..."
+      MAX_RETRIES=30
+      RETRY_COUNT=0
+      
+      while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+        if kubectl --kubeconfig="$TMP_KUBECONFIG" get --raw /version >/dev/null 2>&1; then
+          echo "✅ API server is ready"
+          rm -f "$TMP_KUBECONFIG"
+          exit 0
+        fi
+        
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+          echo "⏳ API not ready, waiting... (attempt $RETRY_COUNT/$MAX_RETRIES)"
+          sleep 10
+        fi
       done
-      echo "API server is ready"
+      
+      echo "❌ API server failed to become ready"
       rm -f "$TMP_KUBECONFIG"
+      exit 1
     EOT
     environment = {
       KUBECONFIG_RAW = talos_cluster_kubeconfig.this.kubeconfig_raw
@@ -111,6 +176,18 @@ resource "null_resource" "untaint_controlplanes" {
 
       rm -f "$TMP_KUBECONFIG"
     EOT
+    environment = {
+      KUBECONFIG_RAW = talos_cluster_kubeconfig.this.kubeconfig_raw
+    }
+  }
+}
+
+resource "null_resource" "post_deploy_checks" {
+  depends_on = [null_resource.untaint_controlplanes]
+
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    command     = "${path.module}/scripts/post-deploy-checks.sh \"$KUBECONFIG_RAW\" 300"
     environment = {
       KUBECONFIG_RAW = talos_cluster_kubeconfig.this.kubeconfig_raw
     }
@@ -146,3 +223,104 @@ resource "terraform_data" "node_annihilation" {
     interpreter = ["/bin/bash", "-c"]
   }
 }
+
+resource "null_resource" "talos_api_check" {
+  for_each = var.controlplane_config.nodes
+
+  depends_on = [talos_machine_configuration_apply.controlplanes]
+
+  triggers = {
+    node_ip   = each.value.ip
+    node_name = each.key
+  }
+
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    command     = <<-EOT
+      set -e
+      NODE_IP="${each.value.ip}"
+      MAX_RETRIES=30
+      RETRY_DELAY=10
+      
+      echo "Checking Talos API on node ${each.key} ($NODE_IP)..."
+      
+      # 1. Vérifier que le port 50000 est ouvert
+      echo "⏳ Checking port 50000 on $NODE_IP..."
+      retries=0
+      while [ $retries -lt $MAX_RETRIES ]; do
+        if timeout 5 bash -c "</dev/tcp/$NODE_IP/50000" 2>/dev/null; then
+          echo "✅ Port 50000 reachable on $NODE_IP"
+          break
+        fi
+        
+        retries=$((retries + 1))
+        if [ $retries -lt $MAX_RETRIES ]; then
+          echo "⏳ Port 50000 not ready, waiting... (attempt $retries/$MAX_RETRIES)"
+          sleep $RETRY_DELAY
+        fi
+      done
+      
+      if [ $retries -eq $MAX_RETRIES ]; then
+        echo "❌ Port 50000 not reachable on $NODE_IP"
+        exit 1
+      fi
+      
+      # 2. Vérifier que Talos est prêt via dmesg
+      echo "⏳ Checking Talos dmesg for readiness on $NODE_IP..."
+      retries=0
+      while [ $retries -lt $MAX_RETRIES ]; do
+        # Utiliser talosctl avec les bons flags (sans --insecure)
+        if timeout 30 talosctl --endpoints $NODE_IP --nodes $NODE_IP \
+           --ca "${var.talos_certs.ca}" \
+           --crt "${var.talos_certs.cert}" \
+           --key "${var.talos_certs.key}" \
+           dmesg 2>/dev/null | grep -Eq "bootstrap|first node|Talos initialized"; then
+          echo "✅ Talos ready on $NODE_IP"
+          exit 0
+        fi
+        
+        retries=$((retries + 1))
+        if [ $retries -lt $MAX_RETRIES ]; then
+          echo "⏳ Talos not ready yet, waiting... (attempt $retries/$MAX_RETRIES)"
+          sleep $RETRY_DELAY
+        fi
+      done
+      
+      echo "❌ Talos not ready on $NODE_IP after $MAX_RETRIES attempts"
+      echo "Debug: Check node status and Talos logs"
+      exit 1
+    EOT
+  }
+}
+
+
+resource "null_resource" "post_bootstrap_health_check" {
+  depends_on = [null_resource.bootstrap_verification]
+
+  triggers = {
+    bootstrap_id = talos_machine_bootstrap.this.id
+  }
+
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    command     = <<-EOT
+      set -e
+      echo "Performing post-bootstrap health checks..."
+      
+      # Attendre que les nodes soient Ready
+      TMP_KUBECONFIG=$(mktemp)
+      echo "$KUBECONFIG_RAW" > "$TMP_KUBECONFIG"
+      chmod 600 "$TMP_KUBECONFIG"
+      
+      echo "Waiting for nodes to be Ready..."
+      kubectl --kubeconfig="$TMP_KUBECONFIG" wait --for=condition=ready nodes --all --timeout=300s
+      
+      echo "✅ Post-bootstrap health checks passed"
+      rm -f "$TMP_KUBECONFIG"
+    EOT
+    environment = {
+      KUBECONFIG_RAW = talos_cluster_kubeconfig.this.kubeconfig_raw
+    }
+  }
+}
+
