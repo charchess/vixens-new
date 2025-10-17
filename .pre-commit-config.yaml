@@ -1,0 +1,32 @@
+repos:
+  - repo: local
+    hooks:
+      - id: terraform-fmt
+        name: Terraform fmt
+        entry: powershell -Command "terraform fmt -recursive"
+        language: system
+        pass_filenames: false
+
+      - id: terraform-validate
+        name: Terraform validate
+        entry: powershell -Command "terraform validate"
+        language: system
+        pass_filenames: false
+
+      - id: terraform-docs
+        name: Terraform docs
+        entry: powershell -Command "& 'C:/Users/charchess/tools/bin/terraform-docs.exe' markdown . > README.md"
+        language: system
+        pass_filenames: false
+
+      - id: terraform-trivy
+        name: Terraform trivy
+        entry: powershell -Command "& 'C:/Users/charchess/tools/bin/trivy.exe' config terraform/"
+        language: system
+        pass_filenames: false
+
+exclude: |
+  (?x)^(
+      terraform/environments/dev/.*\.yaml|
+      .*\.sh$
+  )

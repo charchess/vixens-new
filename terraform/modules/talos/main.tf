@@ -1,7 +1,7 @@
 locals {
   # Determine bootstrap node from controlplane nodes
   bootstrap_node = var.bootstrap_node_ip != "" ? var.bootstrap_node_ip : values(var.controlplane_config.nodes)[0].ip
-  
+
   # Prepare cilium patch if enabled
   cilium_patch = var.cilium_config.enabled ? templatefile("${path.module}/templates/cilium.yaml.tftpl", {
     cilium_manifest = var.cilium_config.manifest_content
@@ -11,9 +11,9 @@ locals {
 # Template file for cilium patch
 resource "local_file" "cilium_patch_template" {
   count = var.cilium_config.enabled ? 1 : 0
-  
+
   filename = "${path.cwd}/.terraform/cilium.yaml.tftpl"
-  content = file("${path.module}/templates/cilium.yaml.tftpl")
+  content  = file("${path.module}/templates/cilium.yaml.tftpl")
 }
 
 # Apply Talos configuration to controlplane nodes
@@ -42,7 +42,7 @@ resource "talos_machine_configuration_apply" "controlplanes" {
 locals {
   # Health check endpoints
   api_health_url = "${replace(var.cluster_endpoint, ":6443", ":50000")}/health"
-  
+
   # Retry configuration
   max_retries = 3
   retry_delay = 10

@@ -4,9 +4,9 @@ resource "helm_release" "argocd" {
   chart            = "argo-cd"
   namespace        = "argocd"
   create_namespace = true
-#  version          = "8.5.8"
-  timeout = 600          # 10 min au lieu de ~5 min par défaut
-  wait    = true         # attendre réellement les replicas Ready
+  #  version          = "8.5.8"
+  timeout = 600  # 10 min au lieu de ~5 min par défaut
+  wait    = true # attendre réellement les replicas Ready
 
   set = [
     {

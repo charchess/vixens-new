@@ -1,8 +1,8 @@
 locals {
   # Parse kubeconfig to extract cluster info
-  kubeconfig = yamldecode(var.kubeconfig_raw)
+  kubeconfig     = yamldecode(var.kubeconfig_raw)
   cluster_server = local.kubeconfig.clusters[0].cluster.server
-  
+
   # Default Cilium values
   default_values = <<-EOT
     ipam:
@@ -33,7 +33,7 @@ locals {
     k8sServiceHost: localhost
     k8sServicePort: 7445
   EOT
-  
+
   # Retry configuration
   max_retries = 5
   retry_delay = 30

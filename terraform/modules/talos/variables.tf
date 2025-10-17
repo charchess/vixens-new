@@ -29,7 +29,7 @@ variable "node_health_check_timeout" {
 }
 
 variable "node_health_max_retries" {
-  type        = number  
+  type        = number
   description = "Maximum number of health check retries"
   default     = 12
 }
