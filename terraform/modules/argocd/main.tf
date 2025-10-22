@@ -39,3 +39,25 @@ resource "helm_release" "argocd" {
     }
   ] : []
 }
+
+resource "null_resource" "force_uninstall" {
+  triggers = {
+    kubeconfig_raw = var.kubeconfig_raw
+    namespace      = var.namespace
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = <<-EOF
+      set -euo pipefail
+      TMP_KUBECONFIG=$(mktemp)
+      echo "${self.triggers.kubeconfig_raw}" > "$TMP_KUBECONFIG"
+      chmod 600 "$TMP_KUBECONFIG"
+
+      kubectl --kubeconfig="$TMP_KUBECONFIG" delete helmrelease argocd -n ${self.triggers.namespace} --ignore-not-found=true || true
+      kubectl --kubeconfig="$TMP_KUBECONFIG" delete ns ${self.triggers.namespace} --ignore-not-found=true --timeout=30s || true
+      echo "✅ ArgoCD force-uninstalled"
+      rm -f "$TMP_KUBECONFIG"
+    EOF
+  }
+}
