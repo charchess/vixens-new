@@ -1,58 +1,49 @@
-# Configure providers
 terraform {
   required_version = ">= 1.0"
-
   required_providers {
-    talos = {
-      source  = "siderolabs/talos"
-      version = "~> 0.9.0"
-    }
+    talos = { source = "siderolabs/talos", version = "~> 0.9.0" }
   }
 }
 
-provider "talos" {}
-
-# Read node patch files
 locals {
-  cilium_manifest = file("${path.module}/cilium.yaml")
-
-  node_patches = {
-    obsy  = file("${path.module}/vixens-dev-obsy.yaml")
-    onyx  = file("${path.module}/vixens-dev-onyx.yaml")
-    opale = file("${path.module}/vixens-dev-opale.yaml")
-  }
+  kubeconfig = yamldecode(module.talos.kubeconfig_raw)
 }
 
-# Deploy Talos cluster
-module "talos_cluster" {
+provider "helm" {
+  kubernetes = {
+    host                   = local.kubeconfig.clusters[0].cluster.server
+    cluster_ca_certificate = base64decode(local.kubeconfig.clusters[0].cluster["certificate-authority-data"])
+    client_certificate     = base64decode(local.kubeconfig.users[0].user["client-certificate-data"])
+    client_key             = base64decode(local.kubeconfig.users[0].user["client-key-data"])
+  }
+}
+module "talos" {
   source = "../../modules/talos"
 
-  cluster_endpoint = var.cluster_endpoint
-  talos_certs      = var.talos_certs
+  cluster_endpoint  = var.cluster_endpoint
+  talos_certs       = var.talos_certs
+  controlplane_yaml = file("${path.module}/controlplane.yaml")
+  bootstrap_node_ip = var.bootstrap_node_ip
 
-  # Timeouts augmentés pour environnement lent
-  node_health_max_retries   = 15
-  node_health_retry_delay   = 45
-  node_health_check_timeout = 45
-  bootstrap_timeout         = 600
-  api_wait_timeout          = 600
-
-  controlplane_config = {
-    yaml_path = var.controlplane_yaml_path
-    nodes = {
-      for name, node in var.controlplanes : name => {
-        ip            = node.ip
-        hostname      = node.hostname
-        install_disk  = node.install_disk
-        patch_content = local.node_patches[name]
-      }
+  nodes = {
+    for k, v in var.controlplanes : k => {
+      ip           = v.ip
+      hostname     = v.hostname
+      install_disk = v.install_disk
+      patch        = file("${path.module}/${v.patch_file}")
     }
   }
 
-  bootstrap_node_ip = var.controlplanes.obsy.ip
-
   cilium_config = {
-    enabled          = true
-    manifest_content = local.cilium_manifest
+    enabled  = true
+    manifest = file("${path.module}/cilium.yaml")
   }
+}
+
+
+module "cilium" {
+  count  = var.enable_cilium ? 1 : 0
+  source = "../../modules/cilium"
+
+  kubeconfig_raw = module.talos.kubeconfig_raw
 }

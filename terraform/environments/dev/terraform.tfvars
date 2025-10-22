@@ -1,6 +1,6 @@
 cluster_endpoint = "https://192.168.111.163:6443"
 
-controlplane_yaml_path = "/root/vixens/talos/vixens-dev/controlplane.yaml"
+bootstrap_node_ip = "192.168.208.162"  # obsy
 
 talos_certs = {
   ca   = "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJQakNCOGFBREFnRUNBaEJjWTFuVi9nRmppTVJUOWlXYzlNak5NQVVHQXl0bGNEQVFNUTR3REFZRFZRUUsKRXdWMFlXeHZjekFlRncweU5UQTVNRGN3TVRVNE1UTmFGdzB6TlRBNU1EVXdNVFU0TVROYU1CQXhEakFNQmdOVgpCQW9UQlhSaGJHOXpNQ293QlFZREsyVndBeUVBWCtrZVZLcjJ0dC9EZ2w0QXhQQlZkL25xYWhsTE1MQ0MyZG9MCnd2ZWdFditqWVRCZk1BNEdBMVVkRHdFQi93UUVBd0lDaERBZEJnTlZIU1VFRmpBVUJnZ3JCZ0VGQlFjREFRWUkKS3dZQkJRVUhBd0l3RHdZRFZSMFRBUUgvQkFVd0F3RUIvekFkQmdOVkhRNEVGZ1FVT2pUbjJrRG5TbGtPTDJONAplQXJ2ZlBsa1JtSXdCUVlESzJWd0EwRUFrMTdoZnExWktKTDRDTXlDc3N1TXpJMVlzV05ycTB1blN6SzllNXpkCjZ1a3NlUWVORlRDazRyYm04NjNsM1FrVkRVSXcveXlDQzloNENjYmJXUDdXREE9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0t"
@@ -13,24 +13,24 @@ controlplanes = {
     ip           = "192.168.208.162"
     hostname     = "obsy"
     install_disk = "/dev/sda"
-    patch_path   = "./vixens-dev-obsy.yaml"
+    patch_file   = "./vixens-dev-obsy.yaml"
   }
 
   onyx = {
     ip           = "192.168.208.164"
     hostname     = "onyx"
     install_disk = "/dev/sda"
-    patch_path   = "./vixens-dev-onyx.yaml"
+    patch_file   = "./vixens-dev-onyx.yaml"
   }
 
   opale = {
     ip           = "192.168.208.163"
     hostname     = "opale"
     install_disk = "/dev/sda"
-    patch_path   = "./vixens-dev-opale.yaml"
+    patch_file   = "./vixens-dev-opale.yaml"
   }
 }
 
-
+enable_cilium = true
 
 
