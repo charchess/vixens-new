@@ -17,3 +17,15 @@ variable "enable_cilium" {
   default     = true
   description = "Installer Cilium après bootstrap Talos"
 }
+
+variable "env_name" {
+  type        = string
+  default     = "dev"
+  description = "Nom de l’environnement (dev, prod, …) → branche Git"
+}
+
+variable "argocd_lb_ip" {
+  type        = string
+  default     = ""
+  description = "IP statique pour ArgoCD LB (vide = DHCP)"
+}

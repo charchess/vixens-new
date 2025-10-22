@@ -47,3 +47,13 @@ module "cilium" {
 
   kubeconfig_raw = module.talos.kubeconfig_raw
 }
+
+
+module "argocd" {
+  source = "../../modules/argocd"
+
+  kubeconfig_raw = module.talos.kubeconfig_raw
+  target_branch  = var.env_name          # "dev", "prod", ...
+  repo_url       = "https://github.com/votre-org/manifests.git"
+  lb_ip          = var.argocd_lb_ip      # laisser vide pour DHCP
+}

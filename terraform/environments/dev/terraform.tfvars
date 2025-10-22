@@ -33,4 +33,5 @@ controlplanes = {
 
 enable_cilium = true
 
-
+env_name     = "dev"
+argocd_lb_ip = "192.168.208.170"
