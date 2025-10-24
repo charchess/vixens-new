@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cmd-params-cm
+data:
+  # valeurs « sécurisées » par défaut (seront patchées par les overlays)
+  server.insecure: "false"
+  server.disable.auth: "false"
+  users.anonymous.enabled: "false"

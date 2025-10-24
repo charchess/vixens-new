@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  generators:
+    - clusters: {}          # scan tous les clusters connus d’ArgoCD
+  selector:
+    matchLabels:
+      env: ""               # filtre : seulement les clusters qui ont le label env
+  template:
+    metadata:
+      name: 'argocd-{{metadata.labels.env}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/charchess/vixens.git
+        targetRevision: '{{metadata.labels.env}}'   # dev / staging / main
+        path: 'kubernetes/overlays/argocd/{{metadata.labels.env}}'
+      destination:
+        server: '{{server}}'
+        namespace: argocd
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
