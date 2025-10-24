@@ -7,7 +7,7 @@ configMapGenerator:
     behavior: merge
     literals:
       - env=dev
-      - repo=https://github.com/<org>/<repo>
+      - repo=https://github.com/charchess/vixens-new
 
 vars:
   - name: ENV

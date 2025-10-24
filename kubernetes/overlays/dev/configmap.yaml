@@ -5,4 +5,4 @@ metadata:
   namespace: argocd
 data:
   env: dev
-  repo: https://github.com/<org>/<repo>   # même repo pour tous
+  repo: https://github.com/charchess/vixens-new   # même repo pour tous
