@@ -7,21 +7,22 @@ spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   generators:
-    - clusters: {}
-  selector:
-    matchLabels:
-      env: ""
+    - list:                 # ⬅ on liste à la main
+        elements:
+          - cluster: in-cluster
+            url: https://kubernetes.default.svc
+            env: dev        # ⬅ valeur à adapter par cluster
   template:
     metadata:
-      name: "argocd-{{.labels.env}}"   # ⬅ clé correcte
+      name: "argocd-{{.env}}"
     spec:
       project: default
       source:
         repoURL: https://github.com/charchess/vixens-new
-        targetRevision: "{{.labels.env}}"
-        path: "kubernetes/overlays/argocd/{{.labels.env}}"
+        targetRevision: "{{.env}}"
+        path: "kubernetes/overlays/argocd/{{.env}}"
       destination:
-        server: "{{.server}}"
+        server: "{{.url}}"
         namespace: argocd
       syncPolicy:
         automated:
