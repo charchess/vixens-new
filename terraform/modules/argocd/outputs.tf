@@ -15,3 +15,12 @@ output "repo_url" {
 output "target_branch" {
   value = var.target_branch
 }
+
+output "server_insecure" {
+  value = var.server_insecure
+}
+
+output "app_of_apps_path" {
+  value = var.app_of_apps_path
+}
+

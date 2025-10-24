@@ -33,5 +33,15 @@ controlplanes = {
 
 enable_cilium = true
 
-env_name     = "dev"
 argocd_lb_ip = "192.168.208.170"
+
+env_name                   = "dev"
+argocd_repo_url            = "https://github.com/charchess/vixens-new"
+argocd_app_of_apps_path    = "./apps-of-apps.yaml"
+argocd_server_insecure     = true
+argocd_server_url = "http://192.168.111.163:30080"
+
+argocd_template_vars = {
+  BRANCH   = "dev"
+  REPO_URL = "https://github.com/charchess/vixens-new"
+}

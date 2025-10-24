@@ -18,3 +18,12 @@ output "bootstrap_status" {
   description = "Cluster bootstrap status"
   value       = module.talos.bootstrap_status
 }
+
+output "argocd_health" {
+  value = {
+    insecure     = module.argocd.server_insecure
+    branch       = module.argocd.target_branch
+    app_of_apps  = module.argocd.app_of_apps_path
+    repo         = module.argocd.repo_url
+  }
+}

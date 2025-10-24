@@ -29,3 +29,34 @@ variable "argocd_lb_ip" {
   default     = ""
   description = "IP statique pour ArgoCD LB (vide = DHCP)"
 }
+
+variable "argocd_repo_url" {
+  type        = string
+  default     = "https://github.com/charchess/vixens-new"
+}
+
+variable "argocd_app_of_apps_path" {
+  type        = string
+  default     = "bootstrap/apps-dev.yaml"
+}
+
+variable "argocd_server_insecure" {
+  type        = bool
+  default     = true
+  description = "Désactive TLS + auth pour dev"
+}
+
+variable "argocd_server_url" {
+  type        = string
+  default     = "http://192.168.111.163:30080"  # VIP de dev
+  description = "URL d’accès au serveur ArgoCD (dev)"
+}
+
+variable "argocd_template_vars" {
+  type        = map(string)
+  default = {
+    BRANCH   = "dev"
+    REPO_URL = "https://github.com/charchess/vixens-new"
+  }
+  description = "Variables injectées dans le template App-of-Apps"
+}

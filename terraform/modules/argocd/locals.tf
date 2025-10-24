@@ -30,6 +30,28 @@ locals {
       tolerations = [
         { key = "node-role.kubernetes.io/control-plane", operator = "Exists", effect = "NoSchedule" }
       ]
+      service = {
+        type  = "NodePort"
+        nodePort = 30080
+      }
+      config = {
+        url = var.server_url != "" ? var.server_url : null   # null = auto
+        "users.anonymous.enabled" = "true"
+      }
+      extraArgs = [
+        "--insecure",
+        "--address=0.0.0.0",
+        "--disable-auth"
+      ]
+    }
+    configs = {
+      params = {
+        "server.disable.auth"       = true
+        "users.anonymous.enabled"   = true
+      }
+      rbac = {
+        "policy.default" = "role:admin"
+      }
     }
     applicationSet = {
       tolerations = [
@@ -49,4 +71,9 @@ locals {
   }
 
   final_values = try(yamlencode(merge(local.default_values, yamldecode(var.extra_values))), yamlencode(local.default_values))
+}
+
+locals {
+  raw_template = file("${path.module}/templates/apps.yaml.tftpl")
+  rendered     = templatestring(local.raw_template, var.app_of_apps_template_vars)
 }
