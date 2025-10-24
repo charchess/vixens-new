@@ -1,23 +1,20 @@
----
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: whoami-dev
+  name: apps
   namespace: argocd
   finalizers:
-    - resources-finalizer.argocj.io
+    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
     repoURL: https://github.com/charchess/vixens-new
-    targetRevision: dev
-    path: apps/whoami/dev          # dossier contenant le manifeste
+    targetRevision: HEAD   # ou la branche de ton repo App-of-Apps
+    path: kubernetes/apps  # dossier qui contient l’ApplicationSet argocd.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: whoami-dev
+    namespace: argocd
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
