@@ -17,13 +17,6 @@ vars:
       apiVersion: v1
     fieldref:
       fieldpath: data.env
-  - name: REPO
-    objref:
-      kind: ConfigMap
-      name: env-data
-      apiVersion: v1
-    fieldref:
-      fieldpath: data.repo
 
 resources:
   - ../../base
@@ -47,19 +40,6 @@ replacements:
           name: apps
         fieldPaths:
           - spec.source.path
-        options:
-          delimiter: '_'
-          index: 1
-  - source:
-      kind: ConfigMap
-      name: env-data
-      fieldPath: data.repo
-    targets:
-      - select:
-          kind: Application
-          name: apps
-        fieldPaths:
-          - spec.source.repoURL
         options:
           delimiter: '_'
           index: 1
