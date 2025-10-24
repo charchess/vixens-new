@@ -4,24 +4,24 @@ metadata:
   name: argocd
   namespace: argocd
 spec:
-  goTemplate: true              # ➜ interpolation Go-template
+  goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   generators:
     - clusters: {}
   selector:
     matchLabels:
-      env: ""                   # seulement les clusters labelisés env
+      env: ""
   template:
     metadata:
-      name: 'argocd-{{.metadata.labels.env}}'   # ➜ valeur résolue
+      name: "argocd-{{.labels.env}}"   # ⬅ clé correcte
     spec:
       project: default
       source:
         repoURL: https://github.com/charchess/vixens-new
-        targetRevision: '{{.metadata.labels.env}}'
-        path: 'kubernetes/overlays/argocd/{{.metadata.labels.env}}'
+        targetRevision: "{{.labels.env}}"
+        path: "kubernetes/overlays/argocd/{{.labels.env}}"
       destination:
-        server: '{{.server}}'
+        server: "{{.server}}"
         namespace: argocd
       syncPolicy:
         automated:
