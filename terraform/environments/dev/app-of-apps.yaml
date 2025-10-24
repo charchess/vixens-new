@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: apps
+  name: vixens-apps
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/charchess/vixens-new
-    targetRevision: HEAD   # ou la branche de ton repo App-of-Apps
+    targetRevision: dev   # ou la branche de ton repo App-of-Apps
     path: kubernetes/apps  # dossier qui contient l’ApplicationSet argocd.yaml
   destination:
     server: https://kubernetes.default.svc
