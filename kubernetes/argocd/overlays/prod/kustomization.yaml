@@ -1,0 +1,40 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: argocd
+resources:
+  - ../../base
+configMapGenerator:
+  - name: argocd-env
+    behavior: merge
+    literals:
+      - env=prod
+vars:
+  - name: ENV
+    objref:
+      kind: ConfigMap
+      name: argocd-env
+      apiVersion: v1
+    fieldref:
+      fieldpath: data.env
+replacements:
+  - source:
+      kind: ConfigMap
+      name: argocd-env
+      fieldPath: data.env
+    targets:
+      - select:
+          kind: Application
+          name: argocd
+        fieldPaths:
+          - spec.source.targetRevision
+        options:
+          delimiter: '_'
+          index: 1
+      - select:
+          kind: Application
+          name: argocd
+        fieldPaths:
+          - spec.source.path
+        options:
+          delimiter: '_'
+          index: 1
