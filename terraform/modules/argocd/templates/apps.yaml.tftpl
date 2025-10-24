@@ -6,9 +6,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: ${REPO_URL}
-    targetRevision: ${BRANCH}
-    path: kubernetes/apps/
+    repoURL: _REPO_URL_        # token à remplacer
+    targetRevision: _ENV_        # token à remplacer
+    path: kubernetes/overlays/_ENV_
   destination:
     server: https://kubernetes.default.svc
     namespace: default

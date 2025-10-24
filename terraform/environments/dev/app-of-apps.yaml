@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/charchess/vixens-new
     targetRevision: dev   # ou la branche de ton repo App-of-Apps
-    path: kubernetes/apps  # dossier qui contient l’ApplicationSet argocd.yaml
+    path: kubernetes/  # dossier qui contient l’ApplicationSet argocd.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
