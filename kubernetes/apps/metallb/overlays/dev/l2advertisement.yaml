@@ -1,3 +1,5 @@
+# kubernetes/apps/metallb/overlays/dev/l2advertisement.yaml
+---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
 metadata:
@@ -5,10 +7,8 @@ metadata:
   namespace: metallb-system
 spec:
   ipAddressPools:
-  - default-pool-cluster
-  - service-pool-cluster
-  interfaces:
-  - eth0
+    - default-pool-cluster
+    - service-pool-cluster
   nodeSelectors:
-  - matchLabels:
-      kubernetes.io/os: linux
+    - matchLabels:
+        kubernetes.io/os: linux

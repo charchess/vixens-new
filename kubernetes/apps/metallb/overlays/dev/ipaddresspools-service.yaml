@@ -1,0 +1,12 @@
+# kubernetes/apps/metallb/overlays/dev/ipaddresspool-service.yaml
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: service-pool-cluster
+  namespace: metallb-system
+spec:
+  addresses:
+    - 192.168.208.70-192.168.208.79
+  autoAssign: false
+  avoidBuggyIPs: true

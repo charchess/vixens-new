@@ -1,14 +1,18 @@
+# kubernetes/apps/metallb/base/kustomization.yaml
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 namespace: metallb-system
-
 resources:
   - namespace.yaml
-  - https://raw.githubusercontent.com/metallb/metallb/v0.15.2/config/manifests/metallb-native.yaml
-
-labels:
-  - pairs:
-      app.kubernetes.io/part-of: metallb
-      app.kubernetes.io/managed-by: kustomize
-    includeSelectors: true
+  - metallb-crds.yaml
+  - metallb.yaml
+  - rbac.yaml
+commonLabels:
+  app.kubernetes.io/part-of: metallb
+  app.kubernetes.io/version: v0.15.2
+images:
+  - name: quay.io/metallb/controller
+    newTag: v0.15.2
+  - name: quay.io/metallb/speaker
+    newTag: v0.15.2

@@ -1,16 +1,17 @@
+# kubernetes/apps/metallb/overlays/dev/kustomization.yaml
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
-resources:
+namespace: metallb-system
+bases:
   - ../../base
-  - configmap.yaml
-
-patches:
-  - path: ipaddresspools.yaml
-  - path: l2advertisement.yaml
-
-labels:
-  - pairs:
-      environment: dev
-      cluster: vixens-dev
-    includeSelectors: true
+patchesStrategicMerge:
+  - ipaddresspool-default.yaml
+  - ipaddresspool-service.yaml
+  - l2advertisement.yaml
+configMapGenerator:
+  - name: metallb-dev-overlays
+    options:
+      disableNameSuffixHash: true
+    literals:
+      - env=dev
