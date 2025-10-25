@@ -1,0 +1,11 @@
+# kubernetes/apps/metallb/base/l2advertisement.yaml
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: l2-adv
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - default-pool-cluster        # seul ce pool sera annoncé
+  interfaces: []                  # vide = toutes les interfaces

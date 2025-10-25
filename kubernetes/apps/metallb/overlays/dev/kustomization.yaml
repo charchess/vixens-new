@@ -2,16 +2,10 @@
 ---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
 namespace: metallb-system
 bases:
   - ../../base
+
 patchesStrategicMerge:
-  - ipaddresspool-default.yaml
-  - ipaddresspool-service.yaml
-  - l2advertisement.yaml
-configMapGenerator:
-  - name: metallb-dev-overlays
-    options:
-      disableNameSuffixHash: true
-    literals:
-      - env=dev
+  - speaker-tolerations.yaml       # tolère les control-plane
