@@ -10,8 +10,20 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/charchess/vixens-new
-    targetRevision: HEAD
+    # 1) chart Helm officiel
+    repoURL: https://helm.traefik.io/traefik
+    chart: traefik
+    targetRevision: 37.2.0
+    helm:
+      releaseName: traefik
+      valueFiles:
+        - $values/values-base.yaml
+        - $values/values-patch.yaml
+      # 2) repo contenant les values + patches kustomize
+    - repoURL: https://github.com/charchess/vixens-new
+      targetRevision: HEAD
+      ref: values
+    # 3) overlays/dev (Kustomize) appliqué **après** helm
     path: kubernetes/apps/traefik/overlays/dev
   destination:
     server: https://kubernetes.default.svc
@@ -22,14 +34,3 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true
-  #  ➜  autorise Kustomize à utiliser helmCharts
-  plugin:
-    name: kustomize
-    env:
-      - name: KUSTOMIZE_PLUGIN_HOME
-        value: /home/argocd/.kustomize/plugin
-      - name: HELM_PLUGINS
-        value: /home/argocd/.helm/plugins
-    args:
-      - --enable-helm

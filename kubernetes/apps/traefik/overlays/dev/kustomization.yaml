@@ -8,8 +8,11 @@ metadata:
 namespace: traefik
 
 resources:
-  - ../../base
+  - ../../base       # contiendra uniquement des CR supplémentaires (IngressRoute...)
 
-patchesStrategicMerge:
-  - values-patch.yaml
-  - ingressroute-patch.yaml
+configMapGenerator:
+  - name: traefik-values
+    files:
+      - values-patch.yaml
+generatorOptions:
+  disableNameSuffixHash: true
