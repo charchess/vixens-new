@@ -5,26 +5,10 @@ namespace: metallb-system
 
 resources:
   - namespace.yaml
-  - metallb-native.yaml
+  - https://raw.githubusercontent.com/metallb/metallb/v0.15.2/config/manifests/metallb-native.yaml
 
 labels:
   - pairs:
       app.kubernetes.io/part-of: metallb
       app.kubernetes.io/managed-by: kustomize
     includeSelectors: true
-
-patches:
-  - target:
-      kind: Deployment
-      name: metallb-controller
-    patch: |-
-      - op: add
-        path: /spec/template/spec/containers/0/args/-
-        value: --log-level=info
-  - target:
-      kind: DaemonSet
-      name: metallb-speaker
-    patch: |-
-      - op: add
-        path: /spec/template/spec/containers/0/args/-
-        value: --log-level=info

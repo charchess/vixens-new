@@ -3,24 +3,14 @@ kind: Kustomization
 
 resources:
   - ../../base
+  - configmap.yaml
 
 patches:
   - path: ipaddresspools.yaml
-    target:
-      kind: IPAddressPool
   - path: l2advertisement.yaml
-    target:
-      kind: L2Advertisement
 
 labels:
   - pairs:
       environment: dev
       cluster: vixens-dev
     includeSelectors: true
-
-configMapGenerator:
-  - name: metallb-config
-    behavior: merge
-    literals:
-      - environment=dev
-      - cluster=vixens-dev
