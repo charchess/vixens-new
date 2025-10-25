@@ -1,0 +1,51 @@
+# kubernetes/apps/traefik/base/values-base.yaml
+---
+# valeurs communes à tous les env
+image:
+  tag: 2.11.0
+
+deployment:
+  replicas: 1
+
+service:
+  type: LoadBalancer
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: "192.168.208.170"
+    metallb.universe.tf/address-pool: service-pool-cluster
+
+ports:
+  web:
+    port: 8000
+    expose: true
+    redirectTo: websecure
+  websecure:
+    port: 8443
+    expose: true
+  traefik:
+    port: 9000
+    expose: false
+
+ingressRoute:
+  dashboard:
+    enabled: false   # on crée le nôtre via CRD
+
+providers:
+  kubernetesCRD:
+    allowExternalNameServices: true
+
+tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+  runAsNonRoot: true
+  runAsUser: 65532
+  readOnlyRootFilesystem: true

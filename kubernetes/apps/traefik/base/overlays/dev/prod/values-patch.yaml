@@ -1,0 +1,13 @@
+# kubernetes/apps/traefik/overlays/prod/values-patch.yaml
+---
+service:
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: "192.168.208.170"
+
+ports:
+  web:
+    redirectTo: websecure
+  websecure:
+    tls:
+      enabled: true
+      certManager: true   # on laisse cert-manager gérer

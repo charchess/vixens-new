@@ -1,0 +1,15 @@
+# kubernetes/apps/traefik/overlays/dev/kustomization.yaml
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: traefik-dev
+
+namespace: traefik
+
+resources:
+  - ../../base
+
+patchesStrategicMerge:
+  - values-patch.yaml
+  - ingressroute-patch.yaml

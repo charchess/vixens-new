@@ -1,0 +1,12 @@
+# kubernetes/apps/traefik/base/middlewares.yaml
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: local-only
+  namespace: traefik
+spec:
+  ipWhiteList:
+    sourceRange:
+      - 192.168.208.0/24
+      - 127.0.0.1/32
