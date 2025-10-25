@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+bases:
+  - ../../base
+
+patchesStrategicMerge:
+  - ipaddresspools.yaml
+  - l2advertisement.yaml
+
+configMapGenerator:
+  - name: metallb-config
+    behavior: merge
+    literals:
+      - environment=dev
+      - cluster=vixens-dev
+
+commonLabels:
+  environment: dev
+  cluster: vixens-dev

@@ -1,36 +1,31 @@
-# clusters/vixens/argocd/apps/metallb-appset.yaml
----
 apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
+kind: Application
 metadata:
   name: metallb
   namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
-  generators:
-    - list:
-        elements:
-          - name: dev
-            cluster: vixens-dev
-            path: overlays/dev/metallb
-          - name: prod
-            cluster: vixens
-            path: overlays/prod/metallb
-  template:
-    metadata:
-      # 👇 Même nom partout
-      name: metallb
-    spec:
-      project: vixens
-      source:
-        repoURL: https://github.com/charchess/vixens-new.git
-        targetRevision: HEAD
-        path: '{{path}}'
-      destination:
-        name: '{{cluster}}'   # Doit correspondre aux clusters ajoutés avec `argocd cluster add`
-        namespace: metallb-system
-      syncPolicy:
-        automated:
-          prune: true
-          selfHeal: true
-        syncOptions:
-          - CreateNamespace=true
+  project: default
+  source:
+    repoURL: https://github.com/charchess/vixens-new
+    targetRevision: dev
+    path: metallb/overlays/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: metallb-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
