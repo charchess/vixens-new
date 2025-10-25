@@ -7,7 +7,6 @@ metadata:
 namespace: metallb-system
 
 resources:
-  - namespace.yaml
   - https://github.com/metallb/metallb/raw/v0.15.2/config/manifests/metallb-native.yaml
   - ipaddresspools.yaml
   - l2advertisement.yaml
