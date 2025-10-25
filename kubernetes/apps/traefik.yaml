@@ -9,7 +9,7 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  sources:                           # <- mot-clé pluriel
+  sources:
     - repoURL: https://helm.traefik.io/traefik
       chart: traefik
       targetRevision: 37.2.0
@@ -18,12 +18,11 @@ spec:
         valueFiles:
           - $values/values-base.yaml
           - $values/values-patch.yaml
-      ref: helm                      # nom arbitraire pour la source helm
     - repoURL: https://github.com/charchess/vixens-new
       targetRevision: HEAD
-      ref: values                    # repo contenant les values + overlays
-  # Kustomize appliqué **après** helm
-  path: kubernetes/apps/traefik/overlays/dev
+      ref: values
+      path: kubernetes/apps/traefik   # <-- dossier contenant les 2 values
+  path: overlays/dev                # Kustomize appliqué après
   destination:
     server: https://kubernetes.default.svc
     namespace: traefik
