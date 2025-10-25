@@ -4,13 +4,13 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: metallb
-  namespace: argocd                 # namespace où tourne ArgoCD
+  namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://github.com/charchess/vixens-new  # <-- adapter
+    repoURL: https://github.com/charchess/vixens-new
     targetRevision: HEAD
     path: kubernetes/apps/metallb/overlays/dev
   destination:
