@@ -9,10 +9,20 @@ metadata:
     - resources-finalizer.argoproj.io
 spec:
   project: default
-  source:
-    repoURL: https://github.com/charchess/vixens-new
-    targetRevision: HEAD
-    path: kubernetes/apps/traefik/overlays/dev   # on choisit l’env ici
+  sources:
+    - repoURL: https://helm.traefik.io/traefik
+      chart: traefik
+      targetRevision: 37.2.0
+      helm:
+        releaseName: traefik
+        valueFiles:
+          - $values/values-base.yaml
+          - $values/overlays/dev/values-patch.yaml
+    - repoURL: https://github.com/charchess/vixens-new
+      targetRevision: HEAD
+      ref: values
+      path: kubernetes/apps/traefik   # dossier racine des values
+  path: overlays/dev                  # Kustomize appliqué **après** helm
   destination:
     server: https://kubernetes.default.svc
     namespace: traefik
@@ -22,4 +32,3 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ApplyOutOfSyncOnly=true

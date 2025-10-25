@@ -4,19 +4,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 metadata:
   name: traefik-dev
-
 namespace: traefik
-
-helmCharts:
-  - name: traefik
-    repo: https://helm.traefik.io/traefik
-    releaseName: traefik
-    namespace: traefik
-    version: 37.2.0
-    valuesFile: values.yaml   # fichier dans le même dossier
-
 resources:
-  - ../../base               # IngressRoute, Middleware, etc.
-
+  - ../../base   # IngressRoute, Middleware, etc.
 patchesStrategicMerge:
   - ingressroute-patch.yaml
