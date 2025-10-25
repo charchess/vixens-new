@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/charchess/vixens-new
     targetRevision: dev
-    path: metallb/overlays/dev
+    path: kubernetes/apps/metallb/overlays/dev
   destination:
     server: https://kubernetes.default.svc
     namespace: metallb-system
