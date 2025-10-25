@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: https://github.com/charchess/vixens-new
     targetRevision: HEAD
-    path: kubernetes/apps/traefik/overlays/dev   # passer à prod quand voulu
+    path: kubernetes/apps/traefik/overlays/dev
   destination:
     server: https://kubernetes.default.svc
     namespace: traefik
@@ -22,3 +22,14 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
+  #  ➜  autorise Kustomize à utiliser helmCharts
+  plugin:
+    name: kustomize
+    env:
+      - name: KUSTOMIZE_PLUGIN_HOME
+        value: /home/argocd/.kustomize/plugin
+      - name: HELM_PLUGINS
+        value: /home/argocd/.helm/plugins
+    args:
+      - --enable-helm
