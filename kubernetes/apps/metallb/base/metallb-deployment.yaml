@@ -27,7 +27,7 @@ spec:
         fsGroup: 65534
       containers:
       - name: metallb-controller
-        image: quay.io/metallb/controller:v0.14.8
+        image: quay.io/metallb/controller:v0.15.2
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -61,7 +61,6 @@ spec:
           successThreshold: 1
           failureThreshold: 3
 ---
-# MetalLB Speaker DaemonSet
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -86,7 +85,7 @@ spec:
       hostNetwork: true
       containers:
       - name: metallb-speaker
-        image: quay.io/metallb/speaker:v0.14.8
+        image: quay.io/metallb/speaker:v0.15.2
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -114,11 +113,6 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        - name: METALLB_ML_SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: metallb-memberlist
-              key: secretkey
         ports:
         - containerPort: 7472
           name: monitoring
@@ -140,26 +134,3 @@ spec:
           timeoutSeconds: 1
           successThreshold: 1
           failureThreshold: 3
----
-# Service Accounts
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: metallb-controller
-  namespace: metallb-system
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: metallb-speaker
-  namespace: metallb-system
----
-# RBAC
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: metallb-system:controller
-rules:
-- apiGroups: [""]
-  resources: ["services", "endpoints", "nodes"]
-  verbs: ["get

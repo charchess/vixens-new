@@ -5,8 +5,7 @@ namespace: metallb-system
 
 resources:
   - namespace.yaml
-  - metallb-crds.yaml
-  - metallb-deployment.yaml
+  - metallb-native.yaml
 
 labels:
   - pairs:
