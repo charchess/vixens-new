@@ -7,12 +7,16 @@ metadata:
 
 namespace: traefik
 
-resources:
-  - ../../base       # contiendra uniquement des CR supplémentaires (IngressRoute...)
+helmCharts:
+  - name: traefik
+    repo: https://helm.traefik.io/traefik
+    releaseName: traefik
+    namespace: traefik
+    version: 37.2.0
+    valuesFile: values.yaml   # fichier dans le même dossier
 
-configMapGenerator:
-  - name: traefik-values
-    files:
-      - values-patch.yaml
-generatorOptions:
-  disableNameSuffixHash: true
+resources:
+  - ../../base               # IngressRoute, Middleware, etc.
+
+patchesStrategicMerge:
+  - ingressroute-patch.yaml
