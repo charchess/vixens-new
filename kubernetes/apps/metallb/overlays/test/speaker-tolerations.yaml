@@ -1,4 +1,4 @@
-# kubernetes/apps/metallb/overlays/dev/speaker-tolerations.yaml
+# kubernetes/apps/metallb/overlays/test/speaker-tolerations.yaml
 ---
 - op: add
   path: /spec/template/spec/tolerations
