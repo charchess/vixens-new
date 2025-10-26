@@ -1,3 +1,4 @@
+# kubernetes/apps/old/overlays/dev/argocd/patch-argocd-insecure.yaml
 # overlays/dev/argocd/patch-argocd-insecure.yaml
 ---
 apiVersion: argoproj.io/v1alpha1
@@ -11,7 +12,7 @@ spec:
     helm:
       values: |
         # Cette section configure le chart Helm d'ArgoCD
-        
+
         # 1. Configuration du serveur pour le mode HTTP
         server:
           # Dit au chart de configurer le mode insecure.

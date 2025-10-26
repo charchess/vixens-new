@@ -1,3 +1,4 @@
+# kubernetes/apps/old/overlays/dev/argocd/deployment-patch.yaml
 # overlays/dev/argocd/deployment-patch.yaml
 ---
 apiVersion: apps/v1
@@ -9,9 +10,9 @@ spec:
   template:
     spec:
       containers:
-      - name: argocd-server
-        env:
-        - name: ARGOCD_SERVER_INSECURE
-          value: "true"
-        - name: ARGOCD_SERVER_DISABLE_AUTH
-          value: "true"
+        - name: argocd-server
+          env:
+            - name: ARGOCD_SERVER_INSECURE
+              value: "true"
+            - name: ARGOCD_SERVER_DISABLE_AUTH
+              value: "true"

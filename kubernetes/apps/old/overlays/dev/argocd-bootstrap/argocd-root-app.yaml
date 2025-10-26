@@ -1,3 +1,4 @@
+# kubernetes/apps/old/overlays/dev/argocd-bootstrap/argocd-root-app.yaml
 # overlays/dev/argocd-bootstrap/argocd-root-app.yaml
 ---
 apiVersion: argoproj.io/v1alpha1

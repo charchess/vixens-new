@@ -1,3 +1,4 @@
+# kubernetes/apps/old/overlays/dev/argocd-bootstrap/kustomization.yaml
 # overlays/dev/argocd-bootstrap/kustomization.yaml
 ---
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -11,5 +12,3 @@ resources:
   - argocd-root-app.yaml
 
 # install.yaml a été retiré car il est géré par le script bootstrap.
-
-  
