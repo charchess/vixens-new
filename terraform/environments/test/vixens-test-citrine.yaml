@@ -1,0 +1,36 @@
+# vixens-test-citrine.yaml
+machine:
+  type: controlplane
+  certSANs:
+    - 192.168.111.184
+    - 192.168.209.184
+    - 192.168.111.180
+  kubelet:
+    image: ghcr.io/siderolabs/kubelet:v1.30.0
+    clusterDNS:
+      - 10.96.0.10
+    nodeIP:
+      validSubnets:
+        - 192.168.111.0/24
+        - 192.168.209.0/24
+  network:
+    hostname: citrine
+    interfaces:
+      - interface: enx00155d00cb1d
+        dhcp: false
+        addresses:
+          - 192.168.209.184/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.209.1
+      - interface: enx00155d00cb1a
+        dhcp: false
+        addresses:
+          - 192.168.111.184/24
+        vip:
+          ip: 192.168.111.180
+    nameservers:
+      - 192.168.209.1
+      - 8.8.8.8
+  install:
+    disk: /dev/sda

@@ -1,0 +1,14 @@
+# kubernetes/apps/traefik/overlays/dev/values-patch.yaml
+---
+# surcharge les valeurs helm
+service:
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: "192.168.208.170"
+
+ports:
+  web:
+    redirectTo: ""     # pas de redirect HTTPS en dev
+  websecure:
+    # on laisse le port 8443 exposé mais sans cert
+    tls:
+      enabled: false

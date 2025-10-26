@@ -1,0 +1,15 @@
+# kubernetes/apps/metallb/overlays/dev/kustomization.yaml
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: metallb-system
+
+resources:
+  - ../../base
+
+patches:
+  - target:
+      kind: DaemonSet
+      name: speaker
+    path: speaker-tolerations.yaml
