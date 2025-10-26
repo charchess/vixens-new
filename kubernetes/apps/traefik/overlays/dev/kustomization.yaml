@@ -9,3 +9,20 @@ resources:
   - ../../base   # IngressRoute, Middleware, etc.
 patchesStrategicMerge:
   - ingressroute-patch.yaml
+
+configMapGenerator: # NEW
+  - name: traefik-env-values
+    literals:
+      - traefik-lb-ip=192.168.10.170 # Example IP for dev
+
+replacements: # NEW
+  - source:
+      kind: ConfigMap
+      name: traefik-env-values
+      fieldPath: data.traefik-lb-ip
+    targets:
+      - select:
+          kind: HelmRelease # Assuming Kustomize transforms HelmChart to HelmRelease or similar
+          name: traefik
+        fieldPaths:
+          - spec.values.service.annotations.metallb.universe.tf/loadBalancerIPs

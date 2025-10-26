@@ -4,9 +4,26 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 metadata:
-  name: traefik-dev
+  name: traefik-test # CHANGED FROM traefik-dev
 namespace: traefik
 resources:
   - ../../base   # IngressRoute, Middleware, etc.
 patchesStrategicMerge:
   - ingressroute-patch.yaml
+
+configMapGenerator: # NEW
+  - name: traefik-env-values
+    literals:
+      - traefik-lb-ip=192.168.20.170 # Example IP for test
+
+replacements: # NEW
+  - source:
+      kind: ConfigMap
+      name: traefik-env-values
+      fieldPath: data.traefik-lb-ip
+    targets:
+      - select:
+          kind: HelmRelease
+          name: traefik
+        fieldPaths:
+          - spec.values.service.annotations.metallb.universe.tf/loadBalancerIPs

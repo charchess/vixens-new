@@ -7,7 +7,7 @@ configMapGenerator:
   - name: env-data
     behavior: merge
     literals:
-      - env=dev
+      - env=test # CHANGED FROM env=dev
       - repo=https://github.com/charchess/vixens-new
 
 vars:
@@ -44,3 +44,13 @@ replacements:
         options:
           delimiter: '_'
           index: 1
+  - source:
+      kind: ConfigMap
+      name: env-data
+      fieldPath: data.repo
+    targets:
+      - select:
+          kind: Application
+          name: apps
+        fieldPaths:
+          - spec.source.repoURL

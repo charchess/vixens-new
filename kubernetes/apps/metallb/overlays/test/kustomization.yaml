@@ -13,3 +13,31 @@ patches:
       kind: DaemonSet
       name: speaker
     path: speaker-tolerations.yaml
+
+configMapGenerator: # NEW
+  - name: metallb-ip-ranges
+    literals:
+      - default-pool-range=192.168.20.240-192.168.20.249 # Example IP range for test
+      - service-pool-range=192.168.20.70-192.168.20.79 # Example IP range for test
+
+replacements: # NEW
+  - source:
+      kind: ConfigMap
+      name: metallb-ip-ranges
+      fieldPath: data.default-pool-range
+    targets:
+      - select:
+          kind: IPAddressPool
+          name: default-pool-cluster
+        fieldPaths:
+          - spec.addresses.0
+  - source:
+      kind: ConfigMap
+      name: metallb-ip-ranges
+      fieldPath: data.service-pool-range
+    targets:
+      - select:
+          kind: IPAddressPool
+          name: service-pool-cluster
+        fieldPaths:
+          - spec.addresses.0
