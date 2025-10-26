@@ -1,0 +1,36 @@
+# vixens-test-carny.yaml
+machine:
+  type: controlplane
+  certSANs:
+    - 192.168.111.183
+    - 192.168.209.183
+    - 192.168.111.180
+  kubelet:
+    image: ghcr.io/siderolabs/kubelet:v1.30.0
+    clusterDNS:
+      - 10.96.0.10
+    nodeIP:
+      validSubnets:
+        - 192.168.111.0/24
+        - 192.168.209.0/24
+  network:
+    hostname: carny
+    interfaces:
+      - interface: enx00155d00cb1b
+        dhcp: false
+        addresses:
+          - 192.168.209.183/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.209.1
+      - interface: enx00155d00cb18
+        dhcp: false
+        addresses:
+          - 192.168.111.183/24
+        vip:
+          ip: 192.168.111.180
+    nameservers:
+      - 192.168.209.1
+      - 8.8.8.8
+  install:
+    disk: /dev/sda
